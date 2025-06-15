@@ -8,7 +8,7 @@ class WebSocketService {
     this.maxReconnectDelay = 30000; // Max 30 seconds
     this.isConnecting = false;
     this.connectionTimeout = null;
-    this.baseUrl = process.env.REACT_APP_WS_URL || 'ws://localhost:8000';
+    this.baseUrl = process.env.REACT_APP_WS_URL || 'ws://localhost:8000/ws';
     this.heartbeatInterval = null;
   }
 
