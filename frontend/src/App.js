@@ -5,6 +5,8 @@ import Typography from '@mui/material/Typography';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import TextField from '@mui/material/TextField';
 import Box from '@mui/material/Box';
+import Alert from '@mui/material/Alert';
+import CircularProgress from '@mui/material/CircularProgress';
 import './App.css';
 
 const darkTheme = createTheme({
@@ -16,6 +18,7 @@ const darkTheme = createTheme({
 function AppContent() {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(50);
   const [total, setTotal] = useState(0);
@@ -23,12 +26,16 @@ function AppContent() {
 
   const fetchData = async () => {
     setLoading(true);
+    setError(null);
     try {
       const offset = page * pageSize;
-      const res = await fetch(`http://localhost:8000/api/items-prices?limit=${pageSize}&offset=${offset}&search=${encodeURIComponent(search)}`);
+      const url = `http://localhost:8000/api/items-prices?limit=${pageSize}&offset=${offset}&search=${encodeURIComponent(search)}`;
+      
+      const res = await fetch(url);
+      if (!res.ok) {
+        throw new Error(`Server error: ${res.status} - ${res.statusText}`);
+      }
       const data = await res.json();
-  
-      console.log("Raw backend data:", data);
   
       const results = Array.isArray(data.results)
         ? data.results
@@ -36,24 +43,17 @@ function AppContent() {
         ? data
         : [];
   
-      const filtered = results.filter(item =>
-        item.name?.toLowerCase().includes(search.toLowerCase())
-      );
-      console.log("Filtered rows:", filtered,search,"234234324324",results);
-  
-      setRows(filtered);
+      setRows(results);
       setTotal(typeof data.total === 'number' ? data.total : results.length);
     } catch (e) {
-      console.error("Failed to fetch", e);
+      setError(e.message || 'Failed to fetch data. Please try again later.');
       setRows([]);
       setTotal(0);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
   
-  console.log('One row sample:', rows[0]);
-
-
   const columns = [
     { field: 'id', headerName: 'ID', width: 90 },
     { field: 'name', headerName: 'Name', width: 200 },
@@ -83,24 +83,6 @@ function AppContent() {
         return Number(params ?? 0).toLocaleString();
       },
     },
-    // {
-    //   field: 'margin',
-    //   headerName: 'Margin',
-    //   width: 130,
-    //   type: 'number',
-    //   valueGetter: (params) => {
-    //     console.log("Margin params:", params);
-    //     const high = Number(params?.row?.high ?? 0);
-    //     const low = Number(params?.row?.low ?? 0);
-    //     return high - low;
-    //   },
-    //   renderCell: (params) => {
-    //     console.log("Margin params:", params);
-    //     const value = Number(params?.value ?? 0);
-    //     const color = value > 0 ? 'lightgreen' : value < 0 ? 'red' : '#aaa';
-    //     return <span style={{ color }}>{value.toLocaleString()}</span>;
-    //   },
-    // },
   ];
   
   
@@ -124,33 +106,68 @@ function AppContent() {
           value={search}
           onChange={(e) => {
             setSearch(e.target.value);
-            setPage(0); // reset to first page on search
+            setPage(0);
           }}
+          disabled={loading}
         />
       </Box>
 
-      <div style={{ height: 700, width: '100%' }}>
+      {error && (
+        <Box mb={2}>
+          <Alert severity="error" onClose={() => setError(null)}>
+            {error}
+          </Alert>
+        </Box>
+      )}
+
+      <div style={{ height: 700, width: '100%', position: 'relative' }}>
+        {loading && (
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              zIndex: 1,
+            }}
+          >
+            <CircularProgress />
+          </Box>
+        )}
         <DataGrid
           columns={columns}
           rows={rows}
           loading={loading}
           pagination
           paginationMode="server"
-          page={page}
-          pageSize={pageSize}
-          rowCount={total}
-          onPageChange={(newPage) => setPage(newPage)}
-          onPageSizeChange={(newSize) => {
-            setPageSize(newSize);
-            setPage(0);
+          initialState={{
+            pagination: {
+              paginationModel: { page: 0, pageSize: 50 },
+            },
           }}
-          rowsPerPageOptions={[25, 50, 100]}
+          pageSizeOptions={[25, 50, 100]}
+          onPaginationModelChange={(model) => {
+            setPage(model.page);
+            setPageSize(model.pageSize);
+          }}
+          rowCount={total}
           getRowId={(row) => row.id}
-          disableSelectionOnClick
+          disableRowSelectionOnClick
           autoHeight
           density="comfortable"
           localeText={{
-            noRowsLabel: loading ? "Loading..." : "No items found",
+            noRowsLabel: loading ? "Loading..." : error ? "Error loading data" : "No items found",
+            loadingOverlayLabel: "Loading...",
+          }}
+          sx={{
+            '& .MuiDataGrid-cell:focus': {
+              outline: 'none',
+            },
           }}
         />
       </div>
