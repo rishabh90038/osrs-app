@@ -1,114 +1,53 @@
-import React, { useEffect, useState } from 'react';
-import { DataGrid } from '@mui/x-data-grid';
+import React from 'react';
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { ThemeProvider } from '@mui/material/styles';
 import TextField from '@mui/material/TextField';
 import Box from '@mui/material/Box';
+import Alert from '@mui/material/Alert';
+import MenuItem from '@mui/material/MenuItem';
+import Button from '@mui/material/Button';
+import { darkTheme } from './constants/theme';
+import { useItemsData } from './hooks/useItemsData';
+import { GRID_COLUMNS, GRID_PAGE_SIZE_OPTIONS } from './constants/gridConfig';
+import ItemsTable from './components/ItemsTable';
+import ErrorBoundary from './components/ErrorBoundary';
 import './App.css';
 
-const darkTheme = createTheme({
-  palette: {
-    mode: 'dark',
-  },
-});
-
 function AppContent() {
-  const [rows, setRows] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(50);
-  const [total, setTotal] = useState(0);
-  const [search, setSearch] = useState("");
+  const {
+    rows,
+    loading,
+    error,
+    paginationModel,
+    total,
+    searchInput,
+    setSearchInput,
+    sortModel,
+    setSortModel,
+    minHigh,
+    setMinHigh,
+    maxHigh,
+    setMaxHigh,
+    minLow,
+    setMinLow,
+    maxLow,
+    setMaxLow,
+    membership,
+    setMembership,
+    handlePaginationModelChange,
+    setError,
+    retryCount,
+  } = useItemsData();
 
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const offset = page * pageSize;
-      const res = await fetch(`http://localhost:8000/api/items-prices?limit=${pageSize}&offset=${offset}&search=${encodeURIComponent(search)}`);
-      const data = await res.json();
-  
-      console.log("Raw backend data:", data);
-  
-      const results = Array.isArray(data.results)
-        ? data.results
-        : Array.isArray(data)
-        ? data
-        : [];
-  
-      const filtered = results.filter(item =>
-        item.name?.toLowerCase().includes(search.toLowerCase())
-      );
-      console.log("Filtered rows:", filtered,search,"234234324324",results);
-  
-      setRows(filtered);
-      setTotal(typeof data.total === 'number' ? data.total : results.length);
-    } catch (e) {
-      console.error("Failed to fetch", e);
-      setRows([]);
-      setTotal(0);
-    }
-    setLoading(false);
+  // Reset filters
+  const handleResetFilters = () => {
+    setMinHigh('');
+    setMaxHigh('');
+    setMinLow('');
+    setMaxLow('');
+    setMembership('');
   };
-  
-  console.log('One row sample:', rows[0]);
-
-
-  const columns = [
-    { field: 'id', headerName: 'ID', width: 90 },
-    { field: 'name', headerName: 'Name', width: 200 },
-    {
-      field: 'high',
-      headerName: 'Sell Price',
-      width: 130,
-      type: 'number',
-      valueGetter: (params) => {
-        const value = params;
-        return isFinite(value) ? value : 0;
-      },
-      valueFormatter: (params) => {
-        return Number(params ?? 0).toLocaleString();
-      },
-    },
-    {
-      field: 'low',
-      headerName: 'Buy Price',
-      width: 130,
-      type: 'number',
-      valueGetter: (params) => {
-        const value =params;
-        return isFinite(value) ? value : 0;
-      },
-      valueFormatter: (params) => {
-        return Number(params ?? 0).toLocaleString();
-      },
-    },
-    // {
-    //   field: 'margin',
-    //   headerName: 'Margin',
-    //   width: 130,
-    //   type: 'number',
-    //   valueGetter: (params) => {
-    //     console.log("Margin params:", params);
-    //     const high = Number(params?.row?.high ?? 0);
-    //     const low = Number(params?.row?.low ?? 0);
-    //     return high - low;
-    //   },
-    //   renderCell: (params) => {
-    //     console.log("Margin params:", params);
-    //     const value = Number(params?.value ?? 0);
-    //     const color = value > 0 ? 'lightgreen' : value < 0 ? 'red' : '#aaa';
-    //     return <span style={{ color }}>{value.toLocaleString()}</span>;
-    //   },
-    // },
-  ];
-  
-  
-  useEffect(() => {
-    fetchData();
-    const interval = setInterval(fetchData, 10000);
-    return () => clearInterval(interval);
-  }, [page, pageSize, search]);
 
   return (
     <Container maxWidth="lg" style={{ marginTop: 40 }}>
@@ -116,52 +55,104 @@ function AppContent() {
         OSRS Item Prices (Live)
       </Typography>
 
-      <Box mb={2}>
+      <Box mb={2} display="flex" flexDirection={{ xs: 'column', sm: 'row' }} gap={2}>
         <TextField
+          data-testid="search-input"
           fullWidth
           variant="outlined"
           label="Search by item name"
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setPage(0); // reset to first page on search
-          }}
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          disabled={loading}
+          placeholder="Type to filter items..."
         />
+        <TextField
+          data-testid="min-high-input"
+          label="Min Sell Price"
+          type="number"
+          value={minHigh}
+          onChange={e => setMinHigh(e.target.value)}
+          size="small"
+        />
+        <TextField
+          data-testid="max-high-input"
+          label="Max Sell Price"
+          type="number"
+          value={maxHigh}
+          onChange={e => setMaxHigh(e.target.value)}
+          size="small"
+        />
+        <TextField
+          data-testid="min-low-input"
+          label="Min Buy Price"
+          type="number"
+          value={minLow}
+          onChange={e => setMinLow(e.target.value)}
+          size="small"
+        />
+        <TextField
+          data-testid="max-low-input"
+          label="Max Buy Price"
+          type="number"
+          value={maxLow}
+          onChange={e => setMaxLow(e.target.value)}
+          size="small"
+        />
+        <TextField
+          data-testid="membership-select"
+          select
+          label="Membership"
+          value={membership}
+          onChange={e => setMembership(e.target.value)}
+          size="small"
+          style={{ minWidth: 120 }}
+        >
+          <MenuItem value="">All</MenuItem>
+          <MenuItem value="true">Members</MenuItem>
+          <MenuItem value="false">Free to Play</MenuItem>
+        </TextField>
+        <Button
+          data-testid="reset-filters-button"
+          variant="outlined"
+          onClick={handleResetFilters}
+          size="small"
+        >
+          Reset Filters
+        </Button>
       </Box>
 
-      <div style={{ height: 700, width: '100%' }}>
-        <DataGrid
-          columns={columns}
-          rows={rows}
-          loading={loading}
-          pagination
-          paginationMode="server"
-          page={page}
-          pageSize={pageSize}
-          rowCount={total}
-          onPageChange={(newPage) => setPage(newPage)}
-          onPageSizeChange={(newSize) => {
-            setPageSize(newSize);
-            setPage(0);
-          }}
-          rowsPerPageOptions={[25, 50, 100]}
-          getRowId={(row) => row.id}
-          disableSelectionOnClick
-          autoHeight
-          density="comfortable"
-          localeText={{
-            noRowsLabel: loading ? "Loading..." : "No items found",
-          }}
-        />
-      </div>
+      {error && (
+        <Box mb={2}>
+          <Alert severity="error" onClose={() => setError(null)}>
+            {error}
+          </Alert>
+        </Box>
+      )}
+
+      <ItemsTable
+        columns={GRID_COLUMNS}
+        rows={rows}
+        loading={loading}
+        paginationModel={paginationModel}
+        onPaginationModelChange={handlePaginationModelChange}
+        pageSizeOptions={GRID_PAGE_SIZE_OPTIONS}
+        rowCount={total}
+        error={error}
+        sortingMode="server"
+        sortModel={sortModel}
+        onSortModelChange={setSortModel}
+        retryCount={retryCount}
+      />
     </Container>
   );
 }
 
 export default function App() {
   return (
-    <ThemeProvider theme={darkTheme}>
-      <AppContent />
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider theme={darkTheme}>
+        <AppContent />
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }

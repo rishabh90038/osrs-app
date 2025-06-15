@@ -1,6 +1,10 @@
 fastapi
-uvicorn
+uvicorn[standard]
 sqlalchemy
 psycopg2-binary
 aiohttp
 python-dotenv
+pytest
+httpx
+alembic
+websockets

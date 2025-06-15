@@ -1,0 +1,35 @@
+{
+  "results": [
+    {
+      "id": 1,
+      "name": "Abyssal whip",
+      "members": true,
+      "icon": "whip.png",
+      "high": 100000,
+      "low": 95000,
+      "highTime": "2024-03-20T12:00:00Z",
+      "lowTime": "2024-03-20T12:00:00Z"
+    },
+    {
+      "id": 2,
+      "name": "Dragon bones",
+      "members": false,
+      "icon": "bones.png",
+      "high": 5000,
+      "low": 4500,
+      "highTime": "2024-03-20T12:00:00Z",
+      "lowTime": "2024-03-20T12:00:00Z"
+    },
+    {
+      "id": 3,
+      "name": "Rune platebody",
+      "members": false,
+      "icon": "platebody.png",
+      "high": 38000,
+      "low": 35000,
+      "highTime": "2024-03-20T12:00:00Z",
+      "lowTime": "2024-03-20T12:00:00Z"
+    }
+  ],
+  "total": 3
+} 
