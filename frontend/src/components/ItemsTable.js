@@ -56,13 +56,14 @@ export default function ItemsTable({
       width: 150,
       renderCell: (params) => {
         const change = formatPriceChange(params.row.oldHigh, params.row.high);
+        const isValidChange = change !== 0 && !isNaN(change) && isFinite(change);
         return (
           <Tooltip title={`Last updated: ${formatDateTime(params.row.highTime)}`}>
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               <Typography sx={{ color: getPriceChangeColor(change) }}>
                 {formatPrice(params.value)}
               </Typography>
-              {change !== 0 && (
+              {isValidChange && (
                 <Typography
                   variant="caption"
                   sx={{
@@ -84,13 +85,14 @@ export default function ItemsTable({
       width: 150,
       renderCell: (params) => {
         const change = formatPriceChange(params.row.oldLow, params.row.low);
+        const isValidChange = change !== 0 && !isNaN(change) && isFinite(change);
         return (
           <Tooltip title={`Last updated: ${formatDateTime(params.row.lowTime)}`}>
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               <Typography sx={{ color: getPriceChangeColor(change) }}>
                 {formatPrice(params.value)}
               </Typography>
-              {change !== 0 && (
+              {isValidChange && (
                 <Typography
                   variant="caption"
                   sx={{

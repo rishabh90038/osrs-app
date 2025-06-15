@@ -108,10 +108,16 @@ export function useItemsData() {
   // WebSocket subscription for real-time updates
   useEffect(() => {
     const unsubscribe = websocketService.subscribe((data) => {
+      console.log('WebSocket message received:', data);
+      
       if (data.type === 'price_update') {
+        console.log('Processing price update for item:', data.item_id);
         setRows(currentRows => {
+          console.log('Current rows count:', currentRows.length);
           const updatedRows = currentRows.map(row => {
-            if (row.id === data.item_id) {
+            // Convert both IDs to strings for comparison since row.id is a string
+            if (row.id === String(data.item_id)) {
+              console.log('Updating item:', row.name, 'with new prices:', data.high, data.low);
               // Store old prices in ref
               oldPricesRef.current.set(data.item_id, {
                 high: row.high,
@@ -130,8 +136,11 @@ export function useItemsData() {
             }
             return row;
           });
+          console.log('Updated rows count:', updatedRows.length);
           return updatedRows;
         });
+      } else if (data.type === 'connection_status') {
+        console.log('WebSocket connection status:', data.status);
       }
     });
 
