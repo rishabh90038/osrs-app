@@ -6,28 +6,34 @@ import logging
 logger = logging.getLogger(__name__)
 
 def upsert_items(db: Session, items: list):
-    try:
-        for item_data in items:
-            try:
-                item = db.query(Item).filter_by(id=item_data['id']).first()
-                if item:
-                    # Update existing item
-                    for key, value in item_data.items():
-                        setattr(item, key, value)
+    for item_data in items:
+        try:
+            # Ensure required fields are present and of correct type
+            for field in ['lowalch', 'highalch', 'value']:
+                if field not in item_data or item_data[field] is None:
+                    item_data[field] = 0  # or another sensible default
                 else:
-                    # Create new item
-                    item = Item(**item_data)
-                    db.add(item)
-            except Exception as e:
-                logger.error(f"Error upserting item {item_data.get('id')}: {e}")
-                continue
-        
-        db.commit()
-        logger.info("Items updated successfully")
-    except Exception as e:
-        logger.error(f"Error in upsert_items: {e}", exc_info=True)
-        db.rollback()
-        raise
+                    try:
+                        item_data[field] = int(item_data[field])
+                    except Exception:
+                        item_data[field] = 0
+
+            item = db.query(Item).filter_by(id=item_data['id']).first()
+            if item:
+                # Update existing item
+                for key, value in item_data.items():
+                    setattr(item, key, value)
+            else:
+                # Create new item
+                item = Item(**item_data)
+                db.add(item)
+            db.commit()
+        except Exception as e:
+            db.rollback()
+            logger.error(f"Error upserting item {item_data.get('id')}: {e}")
+            continue
+
+    logger.info("Items updated successfully")
 
 def update_prices(db: Session, prices: dict):
     try:
