@@ -12,6 +12,9 @@ class Item(Base):
     members = Column(String)
     icon = Column(String)
     icon_large = Column(String)
+    lowalch = Column(Integer)
+    highalch = Column(Integer)
+    value = Column(Integer)
 
     price = relationship("ItemPrice", back_populates="item", uselist=False)
 
