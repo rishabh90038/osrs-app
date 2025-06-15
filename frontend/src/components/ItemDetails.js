@@ -60,7 +60,6 @@ export default function ItemDetails({ item, open, onClose }) {
             color={item.members === 'true' ? 'primary' : 'default'}
             size="small"
             onClick={() => {
-                console.log('Feature not implemented');
                 onClose();
               }}          />
         </Box>

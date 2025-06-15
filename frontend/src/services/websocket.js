@@ -14,14 +14,12 @@ class WebSocketService {
 
   connect() {
     if (this.isConnecting || (this.ws && this.ws.readyState === WebSocket.OPEN)) {
-      console.log('WebSocket already connected or connecting');
       return;
     }
 
     this.isConnecting = true;
 
     try {
-      console.log(`Attempting to connect to WebSocket at ${this.baseUrl}`);
       this.ws = new WebSocket(this.baseUrl);
 
       // Set connection timeout
@@ -33,7 +31,6 @@ class WebSocketService {
       }, 5000);
 
       this.ws.onopen = () => {
-        console.log('WebSocket connected successfully');
         this.isConnecting = false;
         this.reconnectAttempts = 0;
         this.reconnectDelay = 1000;
@@ -48,7 +45,6 @@ class WebSocketService {
       };
 
       this.ws.onclose = (event) => {
-        console.log('WebSocket closed:', event.code, event.reason);
         this.isConnecting = false;
         clearTimeout(this.connectionTimeout);
         this.stopHeartbeat();
@@ -120,8 +116,6 @@ class WebSocketService {
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++;
       const delay = Math.min(this.reconnectDelay * Math.pow(1.5, this.reconnectAttempts - 1), this.maxReconnectDelay);
-      
-      console.log(`Attempting to reconnect in ${delay/1000} seconds (Attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
       
       this.notifySubscribers({
         type: 'connection_status',
