@@ -22,7 +22,7 @@ class WebSocketService {
 
     try {
       console.log(`Attempting to connect to WebSocket at ${this.baseUrl}/ws`);
-      this.ws = new WebSocket(`${this.baseUrl}`);
+      this.ws = new WebSocket(this.baseUrl); // ✅ No "/ws" here!
 
       // Set connection timeout
       this.connectionTimeout = setTimeout(() => {
