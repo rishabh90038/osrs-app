@@ -109,16 +109,11 @@ async def fetch_and_store():
             logger.error(f"Error in fetch_and_store: {str(e)}", exc_info=True)
 
 async def scheduler():
-    logger.info("🚀 Price update scheduler started - will run every 5 minutes")
     while True:
         try:
-            logger.info("⏰ Starting scheduled price update...")
             await fetch_and_store()
-            logger.info("✅ Scheduled price update completed successfully")
         except Exception as e:
-            logger.error(f"❌ Scheduler error: {str(e)}", exc_info=True)
-        
-        logger.info("😴 Sleeping for 5 minutes until next update...")
+            logger.error(f"Scheduler error: {str(e)}", exc_info=True)
         await asyncio.sleep(300)  # every 5 min
 
 def start_background_tasks():

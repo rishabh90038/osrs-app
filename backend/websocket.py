@@ -63,10 +63,7 @@ async def broadcast_price_update(item_id: int, high: float, low: float, high_tim
             "highTime": high_time.isoformat() if high_time else None,
             "lowTime": low_time.isoformat() if low_time else None,
         }
-        logger.info(f"Broadcasting price update for item {item_id}: high={high}, low={low}")
-        logger.info(f"Active WebSocket connections: {len(manager.active_connections)}")
         await manager.broadcast(message)
-        logger.info(f"Successfully broadcasted price update for item {item_id}")
     except Exception as e:
         logger.error(f"Error broadcasting price update: {e}")
         logger.error(traceback.format_exc())
