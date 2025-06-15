@@ -18,8 +18,10 @@ export const formatDateTime = (dateTime) => {
 };
 
 export const formatPriceChange = (oldPrice, newPrice) => {
-  if (oldPrice === null || newPrice === null) return 0;
-  return ((newPrice - oldPrice) / oldPrice) * 100;
+  if (oldPrice === null || oldPrice === undefined || newPrice === null || newPrice === undefined) return 0;
+  if (oldPrice === 0) return 0; // Prevent division by zero
+  const change = ((newPrice - oldPrice) / oldPrice) * 100;
+  return isNaN(change) ? 0 : change;
 };
 
 export const getPriceChangeColor = (change) => {
